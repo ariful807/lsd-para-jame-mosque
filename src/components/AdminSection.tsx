@@ -29,6 +29,8 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
   const [showJsonView, setShowJsonView] = useState<boolean>(false);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [newRecordForm, setNewRecordForm] = useState<Record<string, any>>({});
+  const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
 
   const adminEmail = mosqueStorage.getAdminEmail();
 
@@ -70,6 +72,43 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
       setSearchTerm('');
     } catch (err: any) {
       setMessage('অ্যাক্সেস/সার্ভার সমস্যা: ' + err.message);
+      setIsError(true);
+    }
+  };
+
+  const beginEditRecord = (record: Record<string, any>) => {
+    setEditingRecord(record);
+    setEditForm({ ...record });
+  };
+
+  const saveEditedRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRecord) return;
+    try {
+      mosqueStorage.adminUpdateRecord(activeSheet, editingRecord, editForm, currentUser);
+      setEditingRecord(null);
+      setEditForm({});
+      loadSheet(activeSheet);
+      onDataChanged();
+      setMessage('রেকর্ড সফলভাবে আপডেট হয়েছে।');
+      setIsError(false);
+    } catch (err: any) {
+      setMessage('রেকর্ড আপডেট ব্যর্থ: ' + err.message);
+      setIsError(true);
+    }
+  };
+
+  const deleteRecord = (record: Record<string, any>) => {
+    const label = record.Name || record.Title || record.Donor_Name || record.Member_Name || record.Description || Object.values(record)[0] || 'এই রেকর্ড';
+    if (!window.confirm(`আপনি কি “${label}” রেকর্ডটি স্থায়ীভাবে মুছে ফেলতে চান?`)) return;
+    try {
+      mosqueStorage.adminDeleteRecord(activeSheet, record, currentUser);
+      loadSheet(activeSheet);
+      onDataChanged();
+      setMessage('রেকর্ড মুছে ফেলা হয়েছে।');
+      setIsError(false);
+    } catch (err: any) {
+      setMessage('রেকর্ড মুছতে ব্যর্থ: ' + err.message);
       setIsError(true);
     }
   };
@@ -494,7 +533,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
                       {Object.keys(filteredData[0]).map((key) => (
                         <th key={key}>{key}</th>
                       ))}
-                      {activeSheet === 'Expenses' && <th>অ্যাকশন</th>}
+                      {activeSheet !== 'Audit_Logs' && <th>অ্যাকশন</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -538,21 +577,13 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
                           );
                         })}
 
-                        {activeSheet === 'Expenses' && (
+                        {activeSheet !== 'Audit_Logs' && (
                           <td>
-                            {(row as Expense).Approval_Status === 'Pending' ? (
-                              <button
-                                className="btn"
-                                style={{ padding: '4px 8px', fontSize: '12px' }}
-                                onClick={() => handleApproveExpense((row as Expense).Expense_ID)}
-                              >
-                                অনুমোদন করুন
-                              </button>
-                            ) : (
-                              <span className="muted" style={{ fontSize: '12px' }}>
-                                সম্পন্ন
-                              </span>
-                            )}
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              <button className="btn secondary" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => beginEditRecord(row)}>সম্পাদনা</button>
+                              <button className="btn danger" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => deleteRecord(row)}>মুছুন</button>
+                              {activeSheet === 'Expenses' && (row as Expense).Approval_Status === 'Pending' && <button className="btn" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => handleApproveExpense((row as Expense).Expense_ID)}>অনুমোদন করুন</button>}
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -562,6 +593,24 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {editingRecord && (
+        <div className="modal-backdrop" onClick={() => setEditingRecord(null)}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-record-title" onClick={(e) => e.stopPropagation()}>
+            <h3 id="edit-record-title" style={{ marginTop: 0, color: 'var(--deep)' }}>রেকর্ড সম্পাদনা: {activeSheet}</h3>
+            <form onSubmit={saveEditedRecord}>
+              {Object.entries(editForm).map(([key, value]) => {
+                const protectedField = ['Created_At', 'Created_By', 'Approved_By'].includes(key) || key.endsWith('_ID');
+                return <div className="formrow" key={key}>
+                  <label htmlFor={`edit-field-${key}`}>{key}{protectedField ? ' (পরিবর্তনযোগ্য নয়)' : ''}</label>
+                  <input id={`edit-field-${key}`} type={typeof value === 'number' ? 'number' : 'text'} value={value == null ? '' : String(value)} disabled={protectedField} onChange={(e) => setEditForm((previous) => ({ ...previous, [key]: typeof value === 'number' ? Number(e.target.value) : e.target.value }))} />
+                </div>;
+              })}
+              <div className="toolbar"><button className="btn" type="submit">পরিবর্তন সংরক্ষণ</button><button className="btn secondary" type="button" onClick={() => setEditingRecord(null)}>বাতিল</button></div>
+            </form>
+          </div>
         </div>
       )}
 
