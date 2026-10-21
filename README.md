@@ -13,6 +13,7 @@ A modern Bengali-first smart mosque management and transparency web application 
   - সদস্য তালিকা (Members), অনুদান (Donations), ব্যয় (Expenses), আয় (Income), নোটিশ (Notices), প্রজেক্ট (Projects), এবং অডিট লগ (Audit_Logs)
   - সরাসরি ১-ক্লিকে বকেয়া ব্যয় অনুমোদন (Expense Approval)
   - নতুন রেকর্ড এন্ট্রি ফর্ম (Generic Sheet Record Insert)
+  - রেকর্ড যোগ, সম্পাদনা ও নিশ্চিতকরণসহ মুছে ফেলা; অডিট লগে পরিবর্তনের রেকর্ড
   - ইন্টারেক্টিভ টেবিল ভিউ ও কাঁচা JSON ভিউ
   - অডিট ট্রেইল ও লগিং
 
