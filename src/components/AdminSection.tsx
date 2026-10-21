@@ -13,6 +13,10 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState<boolean>(() => !localStorage.getItem('lsd_mosque_admin_credential_v1'));
   const [loginBusy, setLoginBusy] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try { return sessionStorage.getItem('lsd_mosque_admin_session_v1') === 'active' && Boolean(sessionStorage.getItem('lsd_mosque_admin_session_user_v1')); } catch { return false; }
   });
@@ -138,6 +142,38 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (newPassword.length < 10) throw new Error('নতুন পাসওয়ার্ড কমপক্ষে ১০ অক্ষরের হতে হবে।');
+      if (newPassword !== newPasswordConfirm) throw new Error('নতুন পাসওয়ার্ড দুটি মিলছে না।');
+      const key = 'lsd_mosque_admin_credential_v1';
+      const stored = localStorage.getItem(key);
+      if (!stored) throw new Error('পাসওয়ার্ড সেটআপ পাওয়া যায়নি। লগইন স্ক্রিনে ফিরে যান।');
+      const credential = JSON.parse(stored);
+      const encoder = new TextEncoder();
+      const salt = new Uint8Array(String(credential.salt).match(/.{2}/g)?.map((byte: string) => parseInt(byte, 16)) || []);
+      const material = await crypto.subtle.importKey('raw', encoder.encode(oldPassword), 'PBKDF2', false, ['deriveBits']);
+      const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, material, 256);
+      const oldHash = Array.from(new Uint8Array(bits)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      if (oldHash !== credential.hash) throw new Error('বর্তমান পাসওয়ার্ড সঠিক নয়।');
+      const newSalt = crypto.getRandomValues(new Uint8Array(16));
+      const newSaltText = Array.from(newSalt).map((b) => b.toString(16).padStart(2, '0')).join('');
+      const newSaltBytes = new Uint8Array(newSalt);
+      const newMaterial = await crypto.subtle.importKey('raw', encoder.encode(newPassword), 'PBKDF2', false, ['deriveBits']);
+      const newBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: newSaltBytes, iterations: 150000, hash: 'SHA-256' }, newMaterial, 256);
+      const newHash = Array.from(new Uint8Array(newBits)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      localStorage.setItem(key, JSON.stringify({ salt: newSaltText, hash: newHash, email: currentUser, updatedAt: new Date().toISOString() }));
+      setOldPassword(''); setNewPassword(''); setNewPasswordConfirm('');
+      setShowPasswordChange(false);
+      setMessage('পাসওয়ার্ড পরিবর্তন করা হয়েছে।');
+      setIsError(false);
+    } catch (err: any) {
+      setMessage(err?.message || 'পাসওয়ার্ড পরিবর্তন করা যায়নি।');
+      setIsError(true);
+    }
+  };
+
   const handleLogout = () => {
     try { sessionStorage.removeItem('lsd_mosque_admin_session_v1'); } catch { /* private browsing */ }
     setIsAdminAuthenticated(false);
@@ -201,8 +237,22 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
 
       <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f2f8f4', borderRadius: '12px', border: '1px solid #d2ebd7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <span style={{ fontSize: '14px' }}>সক্রিয় অ্যাডমিন: <b style={{ color: 'var(--green)' }}>{currentUser}</b> <span className="badge approved">লগইন সক্রিয়</span></span>
-        <button type="button" className="btn secondary" onClick={handleLogout}>লগআউট</button>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}><button type="button" className="btn secondary" onClick={() => setShowPasswordChange((v) => !v)}>পাসওয়ার্ড পরিবর্তন</button><button type="button" className="btn secondary" onClick={handleLogout}>লগআউট</button></div>
       </div>
+
+      {showPasswordChange && (
+        <div className="modal-backdrop" onClick={() => setShowPasswordChange(false)}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="change-password-title" onClick={(e) => e.stopPropagation()}>
+            <h3 id="change-password-title" style={{ marginTop: 0, color: 'var(--deep)' }}>অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h3>
+            <form onSubmit={handlePasswordChange}>
+              <div className="formrow"><label htmlFor="old-admin-password">বর্তমান পাসওয়ার্ড</label><input id="old-admin-password" type="password" autoComplete="current-password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} required /></div>
+              <div className="formrow"><label htmlFor="new-admin-password">নতুন পাসওয়ার্ড</label><input id="new-admin-password" type="password" autoComplete="new-password" minLength={10} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required /><small className="muted">কমপক্ষে ১০ অক্ষর ব্যবহার করুন।</small></div>
+              <div className="formrow"><label htmlFor="confirm-new-admin-password">নতুন পাসওয়ার্ড নিশ্চিত করুন</label><input id="confirm-new-admin-password" type="password" autoComplete="new-password" minLength={10} value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} required /></div>
+              <div className="toolbar"><button className="btn" type="submit">পাসওয়ার্ড সংরক্ষণ</button><button className="btn secondary" type="button" onClick={() => setShowPasswordChange(false)}>বাতিল</button></div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="toolbar" style={{ marginTop: '20px' }}>
         <button
