@@ -219,6 +219,37 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
     return JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  if (!isAdminAuthenticated) {
+    return (
+      <section id="admin" className="panel admin-login-panel">
+        <div className="admin-login-art">
+          <div className="admin-login-mark">☪</div>
+          <span className="admin-login-eyebrow">SECURE ADMIN ACCESS</span>
+          <h2>অ্যাডমিন লগইন</h2>
+          <p>এলএসডি পাড়া জামে মসজিদ ব্যবস্থাপনা প্যানেলে প্রবেশ করতে অনুমোদিত ইমেইল ও পাসওয়ার্ড দিন।</p>
+        </div>
+        <form className="admin-login-form" onSubmit={handleLogin} autoComplete="on">
+          <div className="formrow">
+            <label htmlFor="admin-email">অ্যাডমিন ইমেইল</label>
+            <input id="admin-email" type="email" autoComplete="username" value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} required />
+          </div>
+          <div className="formrow">
+            <label htmlFor="admin-password">{needsPasswordSetup ? 'নতুন পাসওয়ার্ড তৈরি করুন' : 'পাসওয়ার্ড'}</label>
+            <input id="admin-password" type="password" autoComplete={needsPasswordSetup ? 'new-password' : 'current-password'} value={inputPassword} onChange={(e) => setInputPassword(e.target.value)} minLength={10} required />
+            <small className="muted">কমপক্ষে ১০ অক্ষর ব্যবহার করুন।</small>
+          </div>
+          {needsPasswordSetup && <div className="formrow">
+            <label htmlFor="admin-password-confirm">পাসওয়ার্ড নিশ্চিত করুন</label>
+            <input id="admin-password-confirm" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={10} required />
+          </div>}
+          <button className="btn admin-login-submit" type="submit" disabled={loginBusy}>{loginBusy ? 'যাচাই করা হচ্ছে…' : needsPasswordSetup ? 'প্রথম পাসওয়ার্ড সেট করুন' : 'নিরাপদে লগইন করুন'}</button>
+          <div className={isError ? 'message error' : 'message'} role="status">{message}</div>
+          <p className="admin-security-note"><strong>গুরুত্বপূর্ণ:</strong> এই GitHub Pages সংস্করণে পাসওয়ার্ড যাচাই ব্রাউজারেই হয়। এটি ব্যবহারযোগ্য অতিরিক্ত বাধা, কিন্তু সার্ভার-সাইড নিরাপত্তা নয়। বাস্তব/আর্থিক ডেটার জন্য Google Apps Script বা অন্য ব্যাকএন্ডে যাচাই চালু করতে হবে।</p>
+        </form>
+      </section>
+    );
+  }
+
   return (
     <section id="admin" className="panel">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
@@ -500,38 +531,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
                             displayVal = formatBengaliDate(val);
                           }
 
-                          if (!isAdminAuthenticated) {
-    return (
-      <section id="admin" className="panel admin-login-panel">
-        <div className="admin-login-art">
-          <div className="admin-login-mark">☪</div>
-          <span className="admin-login-eyebrow">SECURE ADMIN ACCESS</span>
-          <h2>অ্যাডমিন লগইন</h2>
-          <p>এলএসডি পাড়া জামে মসজিদ ব্যবস্থাপনা প্যানেলে প্রবেশ করতে অনুমোদিত ইমেইল ও পাসওয়ার্ড দিন।</p>
-        </div>
-        <form className="admin-login-form" onSubmit={handleLogin} autoComplete="on">
-          <div className="formrow">
-            <label htmlFor="admin-email">অ্যাডমিন ইমেইল</label>
-            <input id="admin-email" type="email" autoComplete="username" value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} required />
-          </div>
-          <div className="formrow">
-            <label htmlFor="admin-password">{needsPasswordSetup ? 'নতুন পাসওয়ার্ড তৈরি করুন' : 'পাসওয়ার্ড'}</label>
-            <input id="admin-password" type="password" autoComplete={needsPasswordSetup ? 'new-password' : 'current-password'} value={inputPassword} onChange={(e) => setInputPassword(e.target.value)} minLength={10} required />
-            <small className="muted">কমপক্ষে ১০ অক্ষর ব্যবহার করুন।</small>
-          </div>
-          {needsPasswordSetup && <div className="formrow">
-            <label htmlFor="admin-password-confirm">পাসওয়ার্ড নিশ্চিত করুন</label>
-            <input id="admin-password-confirm" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={10} required />
-          </div>}
-          <button className="btn admin-login-submit" type="submit" disabled={loginBusy}>{loginBusy ? 'যাচাই করা হচ্ছে…' : needsPasswordSetup ? 'প্রথম পাসওয়ার্ড সেট করুন' : 'নিরাপদে লগইন করুন'}</button>
-          <div className={isError ? 'message error' : 'message'} role="status">{message}</div>
-          <p className="admin-security-note"><strong>গুরুত্বপূর্ণ:</strong> এই GitHub Pages সংস্করণে পাসওয়ার্ড যাচাই ব্রাউজারেই হয়। এটি ব্যবহারযোগ্য অতিরিক্ত বাধা, কিন্তু সার্ভার-সাইড নিরাপত্তা নয়। বাস্তব/আর্থিক ডেটার জন্য Google Apps Script বা অন্য ব্যাকএন্ডে যাচাই চালু করতে হবে।</p>
-        </form>
-      </section>
-    );
-  }
-
-  return (
+                          return (
                             <td key={vIdx} style={{ maxWidth: '250px', wordBreak: 'break-word' }}>
                               {displayVal}
                             </td>
