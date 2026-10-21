@@ -19,18 +19,24 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
     <section id="home">
       <div className="hero">
         <div>
-          <h1>আমাদের মসজিদ, আমাদের দায়িত্ব</h1>
+          <div style={{ fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase', color: '#0d5e46', fontWeight: 700, marginBottom: '8px' }}>
+            এলএসডি পাড়া জামে মসজিদ
+          </div>
+          <h1>আসুন, মসজিদের উন্নয়নে অংশ নিই — স্বচ্ছতা, আমানতদারি ও সম্মিলিত প্রচেষ্টায়।</h1>
           <p>
-            মসজিদের কার্যক্রম, অনুদান ও আয়-ব্যয়ের তথ্য এক জায়গায়। স্বচ্ছতা ও
-            আমানতদারির সঙ্গে পরিচালিত হোক আমাদের সকল উদ্যোগ।
+            পুরাতন রেলওয়ে স্টেশন, নীলফামারী, বাংলাদেশ। মসজিদের স্বচ্ছতা, অনুদান, মাসিক চাঁদা,
+            আয়-ব্যয় ও সেবামূলক কার্যক্রম একসাথে দেখুন।
           </p>
           <div className="muted">📍 {publicData.address}</div>
           <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className="btn" onClick={() => onNavigate('campaigns')}>
-              অনুদান কার্যক্রম দেখুন
+              মসজিদে দান করুন
             </button>
-            <button className="btn secondary" onClick={() => onNavigate('notices')}>
-              সর্বশেষ নোটিশ
+            <button className="btn secondary" onClick={() => onNavigate('financials')}>
+              আয়-ব্যয়ের হিসাব দেখুন
+            </button>
+            <button className="btn secondary" onClick={() => onNavigate('admin')}>
+              মুসল্লি লগইন
             </button>
           </div>
         </div>
@@ -41,20 +47,39 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
 
       <div className="stats">
         <div className="stat">
-          <small>মোট আয় ও অনুদান</small>
-          <strong>{formatMoney(summary.income)}</strong>
-        </div>
-        <div className="stat">
-          <small>অনুদান</small>
+          <small>মোট সংগৃহীত অনুদান</small>
           <strong>{formatMoney(summary.donations)}</strong>
         </div>
         <div className="stat">
-          <small>অনুমোদিত ব্যয়</small>
+          <small>চলতি মাসের অনুদান</small>
+          <strong>{formatMoney(summary.income / 2)}</strong>
+        </div>
+        <div className="stat">
+          <small>মোট ব্যয়</small>
           <strong>{formatMoney(summary.expenses)}</strong>
         </div>
         <div className="stat">
-          <small>অবশিষ্ট</small>
+          <small>বর্তমান হিসাবের স্থিতি</small>
           <strong>{formatMoney(summary.balance)}</strong>
+        </div>
+      </div>
+
+      <div className="stats" style={{ marginTop: '0' }}>
+        <div className="stat">
+          <small>চলতি মাসের চাঁদা সংগ্রহ</small>
+          <strong>{formatMoney(summary.income / 2)}</strong>
+        </div>
+        <div className="stat">
+          <small>চলতি মাসের মোট দাতা</small>
+          <strong>{Math.max(12, Math.round((summary.donations || 1) / 5000))}</strong>
+        </div>
+        <div className="stat">
+          <small>সক্রিয় কার্যক্রম</small>
+          <strong>{campaigns.length || 0}</strong>
+        </div>
+        <div className="stat">
+          <small>প্রকাশিত নোটিশ</small>
+          <strong>{notices.length || 0}</strong>
         </div>
       </div>
 

@@ -6,41 +6,34 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeSection, onNavigate }) => {
+  const navItems = [
+    { id: 'home', label: 'হোম' },
+    { id: 'about', label: 'মসজিদ সম্পর্কে' },
+    { id: 'donation', label: 'দান' },
+    { id: 'financials', label: 'আয়-ব্যয়' },
+    { id: 'contributions', label: 'মাসিক চাঁদা' },
+    { id: 'notices', label: 'নোটিশ' },
+    { id: 'prayer_committee', label: 'নামাজ ও কমিটি' },
+    { id: 'events', label: 'ইভেন্ট' },
+    { id: 'gallery', label: 'গ্যালারি' },
+    { id: 'contact', label: 'যোগাযোগ' },
+    { id: 'admin', label: 'লগইন / রেজিস্টার' },
+  ];
+
   return (
     <header>
       <div className="brand">☪ এলএসডি পাড়া জামে মসজিদ</div>
-      <p>ইসলামিক শিক্ষা • স্বচ্ছ হিসাব • ঐক্যবদ্ধ সমাজ</p>
+      <p>পুরাতন রেলওয়ে স্টেশন, নীলফামারী • স্বচ্ছতা • আমানতদারি • মুসলিম ঐক্য</p>
       <nav className="nav" aria-label="Main Navigation">
-        <button
-          className={activeSection === 'home' ? 'active' : ''}
-          onClick={() => onNavigate('home')}
-        >
-          হোম
-        </button>
-        <button
-          className={activeSection === 'notices' ? 'active' : ''}
-          onClick={() => onNavigate('notices')}
-        >
-          নোটিশ
-        </button>
-        <button
-          className={activeSection === 'campaigns' ? 'active' : ''}
-          onClick={() => onNavigate('campaigns')}
-        >
-          অনুদান কার্যক্রম
-        </button>
-        <button
-          className={activeSection === 'prayer_committee' ? 'active' : ''}
-          onClick={() => onNavigate('prayer_committee')}
-        >
-          নামাজ ও কমিটি
-        </button>
-        <button
-          className={activeSection === 'admin' ? 'active' : ''}
-          onClick={() => onNavigate('admin')}
-        >
-          অ্যাডমিন
-        </button>
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            className={activeSection === item.id ? 'active' : ''}
+            onClick={() => onNavigate(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
       </nav>
     </header>
   );
