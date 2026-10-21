@@ -7,9 +7,15 @@ interface AdminSectionProps {
 }
 
 export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => {
-  const [currentUser, setCurrentUser] = useState<string>(() => mosqueStorage.getAdminEmail());
+  const [currentUser, setCurrentUser] = useState<string>('');
   const [inputEmail, setInputEmail] = useState<string>(() => mosqueStorage.getAdminEmail());
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(true);
+  const [inputPassword, setInputPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [needsPasswordSetup, setNeedsPasswordSetup] = useState<boolean>(() => !localStorage.getItem('lsd_mosque_admin_credential_v1'));
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try { return sessionStorage.getItem('lsd_mosque_admin_session_v1') === 'active'; } catch { return false; }
+  });
   const [activeSheet, setActiveSheet] = useState<string>('Dashboard');
   const [sheetData, setSheetData] = useState<any[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -23,14 +29,15 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
   const adminEmail = mosqueStorage.getAdminEmail();
 
   useEffect(() => {
+    if (!isAdminAuthenticated || !currentUser) return;
     try {
       mosqueStorage.requireAdmin(currentUser);
-      setIsAdminAuthenticated(true);
       loadDashboard();
     } catch {
       setIsAdminAuthenticated(false);
+      try { sessionStorage.removeItem('lsd_mosque_admin_session_v1'); } catch { /* private browsing */ }
     }
-  }, [currentUser]);
+  }, [currentUser, isAdminAuthenticated]);
 
   const loadDashboard = () => {
     try {
@@ -76,20 +83,70 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentUser(inputEmail.trim());
+    if (loginBusy) return;
+    setLoginBusy(true);
+    setIsError(false);
     try {
-      mosqueStorage.requireAdmin(inputEmail.trim());
+      const email = inputEmail.trim().toLowerCase();
+      if (email !== adminEmail.trim().toLowerCase()) throw new Error('এই ইমেইলটি অনুমোদিত অ্যাডমিন ইমেইলের সঙ্গে মিলছে না।');
+      if (inputPassword.length < 10) throw new Error('পাসওয়ার্ড কমপক্ষে ১০ অক্ষরের হতে হবে।');
+      const key = 'lsd_mosque_admin_credential_v1';
+      const encoder = new TextEncoder();
+      const makeHash = async (password: string, salt: Uint8Array) => {
+        const material = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+        const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, material, 256);
+        return Array.from(new Uint8Array(bits)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      };
+      const stored = localStorage.getItem(key);
+      if (!stored) {
+        if (inputPassword !== confirmPassword) throw new Error('দুটি পাসওয়ার্ড মিলছে না।');
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const saltText = Array.from(salt).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const hash = await makeHash(inputPassword, salt);
+        localStorage.setItem(key, JSON.stringify({ salt: saltText, hash, email, createdAt: new Date().toISOString() }));
+        setNeedsPasswordSetup(false);
+      } else {
+        const attemptsKey = 'lsd_mosque_admin_login_attempts_v1';
+        const attemptData = JSON.parse(localStorage.getItem(attemptsKey) || '{"count":0,"until":0}');
+        if (Date.now() < Number(attemptData.until || 0)) {
+          throw new Error('অনেকবার ভুল চেষ্টা হয়েছে। ৫ মিনিট পর আবার চেষ্টা করুন।');
+        }
+        const credential = JSON.parse(stored);
+        const salt = new Uint8Array(String(credential.salt).match(/.{2}/g)?.map((byte: string) => parseInt(byte, 16)) || []);
+        const hash = await makeHash(inputPassword, salt);
+        if (hash !== credential.hash || email !== String(credential.email).toLowerCase()) {
+          const count = Number(attemptData.count || 0) + 1;
+          localStorage.setItem(attemptsKey, JSON.stringify({ count: count >= 5 ? 0 : count, until: count >= 5 ? Date.now() + 5 * 60 * 1000 : 0 }));
+          throw new Error(count >= 5 ? '৫ বার ভুল চেষ্টা হয়েছে। ৫ মিনিটের জন্য লগইন বন্ধ রাখা হয়েছে।' : `ইমেইল বা পাসওয়ার্ড সঠিক নয়। বাকি চেষ্টা: ${5 - count}`);
+        }
+        localStorage.removeItem(attemptsKey);
+      }
+      setCurrentUser(email);
+      try { sessionStorage.setItem('lsd_mosque_admin_session_v1', 'active'); } catch { /* session storage unavailable */ }
       setIsAdminAuthenticated(true);
+      setInputPassword('');
+      setConfirmPassword('');
+      setMessage('লগইন সফল হয়েছে।');
       setIsError(false);
-      setMessage(`স্বাগতম! অ্যাডমিন হিসেবে লগইন সফল হয়েছে: ${inputEmail}`);
-      loadDashboard();
     } catch (err: any) {
-      setIsAdminAuthenticated(false);
       setIsError(true);
-      setMessage(err.message);
+      setMessage(err?.message || 'লগইন করা যায়নি। আবার চেষ্টা করুন।');
+    } finally {
+      setLoginBusy(false);
     }
+  };
+
+  const handleLogout = () => {
+    try { sessionStorage.removeItem('lsd_mosque_admin_session_v1'); } catch { /* private browsing */ }
+    setIsAdminAuthenticated(false);
+    setCurrentUser('');
+    setInputPassword('');
+    setConfirmPassword('');
+    setActiveSheet('Dashboard');
+    setSheetData([]);
+    setMessage('আপনি নিরাপদে লগআউট করেছেন।');
   };
 
   const handleResetData = () => {
@@ -142,66 +199,9 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: '16px',
-          padding: '12px 16px',
-          background: isAdminAuthenticated ? '#f2f8f4' : '#fff4f4',
-          borderRadius: '10px',
-          border: `1px solid ${isAdminAuthenticated ? '#d2ebd7' : '#ffd3d3'}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '10px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '14px' }}>
-            বর্তমান সক্রিয় অ্যাকাউন্ট:{' '}
-            <b style={{ color: isAdminAuthenticated ? 'var(--green)' : '#c52222' }}>
-              {currentUser || 'অননুমোদিত'}
-            </b>
-          </span>
-          <span
-            className={`badge ${isAdminAuthenticated ? 'approved' : 'danger'}`}
-          >
-            {isAdminAuthenticated ? '✓ অ্যাক্সেস অনুমোদিত' : '✕ অ্যাক্সেস সীমিত'}
-          </span>
-        </div>
-
-        <form onSubmit={handleLogin} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input
-            type="email"
-            value={inputEmail}
-            onChange={(e) => setInputEmail(e.target.value)}
-            placeholder="অ্যাডমিন ইমেইল লিখুন"
-            style={{
-              padding: '6px 10px',
-              fontSize: '13px',
-              border: '1px solid var(--line)',
-              borderRadius: '6px',
-              width: '210px',
-            }}
-            required
-          />
-          <button type="submit" className="btn" style={{ padding: '6px 12px', fontSize: '13px' }}>
-            যাচাই
-          </button>
-          {!isAdminAuthenticated && (
-            <button
-              type="button"
-              className="btn secondary"
-              style={{ padding: '6px 12px', fontSize: '13px' }}
-              onClick={() => {
-                setInputEmail(adminEmail);
-                setCurrentUser(adminEmail);
-              }}
-            >
-              স্বাভাবিক অ্যাডমিন হিসেবে প্রবেশ
-            </button>
-          )}
-        </form>
+      <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f2f8f4', borderRadius: '12px', border: '1px solid #d2ebd7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <span style={{ fontSize: '14px' }}>সক্রিয় অ্যাডমিন: <b style={{ color: 'var(--green)' }}>{currentUser}</b> <span className="badge approved">লগইন সক্রিয়</span></span>
+        <button type="button" className="btn secondary" onClick={handleLogout}>লগআউট</button>
       </div>
 
       <div className="toolbar" style={{ marginTop: '20px' }}>
@@ -432,7 +432,38 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
                             displayVal = formatBengaliDate(val);
                           }
 
-                          return (
+                          if (!isAdminAuthenticated) {
+    return (
+      <section id="admin" className="panel admin-login-panel">
+        <div className="admin-login-art">
+          <div className="admin-login-mark">☪</div>
+          <span className="admin-login-eyebrow">SECURE ADMIN ACCESS</span>
+          <h2>অ্যাডমিন লগইন</h2>
+          <p>এলএসডি পাড়া জামে মসজিদ ব্যবস্থাপনা প্যানেলে প্রবেশ করতে অনুমোদিত ইমেইল ও পাসওয়ার্ড দিন।</p>
+        </div>
+        <form className="admin-login-form" onSubmit={handleLogin}>
+          <div className="formrow">
+            <label htmlFor="admin-email">অ্যাডমিন ইমেইল</label>
+            <input id="admin-email" type="email" autoComplete="username" value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} required />
+          </div>
+          <div className="formrow">
+            <label htmlFor="admin-password">{needsPasswordSetup ? 'নতুন পাসওয়ার্ড তৈরি করুন' : 'পাসওয়ার্ড'}</label>
+            <input id="admin-password" type="password" autoComplete={needsPasswordSetup ? 'new-password' : 'current-password'} value={inputPassword} onChange={(e) => setInputPassword(e.target.value)} minLength={10} required />
+            <small className="muted">কমপক্ষে ১০ অক্ষর ব্যবহার করুন।</small>
+          </div>
+          {needsPasswordSetup && <div className="formrow">
+            <label htmlFor="admin-password-confirm">পাসওয়ার্ড নিশ্চিত করুন</label>
+            <input id="admin-password-confirm" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={10} required />
+          </div>}
+          <button className="btn admin-login-submit" type="submit" disabled={loginBusy}>{loginBusy ? 'যাচাই করা হচ্ছে…' : needsPasswordSetup ? 'প্রথম পাসওয়ার্ড সেট করুন' : 'নিরাপদে লগইন করুন'}</button>
+          <div className={isError ? 'message error' : 'message'} role="status">{message}</div>
+          <p className="admin-security-note"><strong>গুরুত্বপূর্ণ:</strong> এই GitHub Pages সংস্করণে পাসওয়ার্ড যাচাই ব্রাউজারেই হয়। এটি ব্যবহারযোগ্য অতিরিক্ত বাধা, কিন্তু সার্ভার-সাইড নিরাপত্তা নয়। বাস্তব/আর্থিক ডেটার জন্য Google Apps Script বা অন্য ব্যাকএন্ডে যাচাই চালু করতে হবে।</p>
+        </form>
+      </section>
+    );
+  }
+
+  return (
                             <td key={vIdx} style={{ maxWidth: '250px', wordBreak: 'break-word' }}>
                               {displayVal}
                             </td>
