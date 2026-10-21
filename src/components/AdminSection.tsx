@@ -7,14 +7,14 @@ interface AdminSectionProps {
 }
 
 export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => {
-  const [currentUser, setCurrentUser] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<string>(() => { try { return sessionStorage.getItem('lsd_mosque_admin_session_user_v1') || ''; } catch { return ''; } });
   const [inputEmail, setInputEmail] = useState<string>(() => mosqueStorage.getAdminEmail());
   const [inputPassword, setInputPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState<boolean>(() => !localStorage.getItem('lsd_mosque_admin_credential_v1'));
   const [loginBusy, setLoginBusy] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    try { return sessionStorage.getItem('lsd_mosque_admin_session_v1') === 'active'; } catch { return false; }
+    try { return sessionStorage.getItem('lsd_mosque_admin_session_v1') === 'active' && Boolean(sessionStorage.getItem('lsd_mosque_admin_session_user_v1')); } catch { return false; }
   });
   const [activeSheet, setActiveSheet] = useState<string>('Dashboard');
   const [sheetData, setSheetData] = useState<any[]>([]);
@@ -35,7 +35,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
       loadDashboard();
     } catch {
       setIsAdminAuthenticated(false);
-      try { sessionStorage.removeItem('lsd_mosque_admin_session_v1'); } catch { /* private browsing */ }
+      try { sessionStorage.removeItem('lsd_mosque_admin_session_v1'); sessionStorage.removeItem('lsd_mosque_admin_session_user_v1'); } catch { /* private browsing */ }
     }
   }, [currentUser, isAdminAuthenticated]);
 
@@ -124,7 +124,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
         localStorage.removeItem(attemptsKey);
       }
       setCurrentUser(email);
-      try { sessionStorage.setItem('lsd_mosque_admin_session_v1', 'active'); } catch { /* session storage unavailable */ }
+      try { sessionStorage.setItem('lsd_mosque_admin_session_v1', 'active'); sessionStorage.setItem('lsd_mosque_admin_session_user_v1', email); } catch { /* session storage unavailable */ }
       setIsAdminAuthenticated(true);
       setInputPassword('');
       setConfirmPassword('');
@@ -218,6 +218,12 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
           সদস্য তালিকা
         </button>
         <button
+          className={activeSheet === 'Contributions' ? 'btn' : 'btn secondary'}
+          onClick={() => loadSheet('Contributions')}
+        >
+          মাসিক চাঁদা
+        </button>
+        <button
           className={activeSheet === 'Donations' ? 'btn' : 'btn secondary'}
           onClick={() => loadSheet('Donations')}
         >
@@ -252,6 +258,18 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
           onClick={() => loadSheet('Projects')}
         >
           প্রজেক্ট
+        </button>
+        <button
+          className={activeSheet === 'Committee' ? 'btn' : 'btn secondary'}
+          onClick={() => loadSheet('Committee')}
+        >
+          পরিচালনা কমিটি
+        </button>
+        <button
+          className={activeSheet === 'Prayer_Times' ? 'btn' : 'btn secondary'}
+          onClick={() => loadSheet('Prayer_Times')}
+        >
+          নামাজের সময়
         </button>
         <button
           className={activeSheet === 'Audit_Logs' ? 'btn' : 'btn secondary'}
@@ -441,7 +459,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
           <h2>অ্যাডমিন লগইন</h2>
           <p>এলএসডি পাড়া জামে মসজিদ ব্যবস্থাপনা প্যানেলে প্রবেশ করতে অনুমোদিত ইমেইল ও পাসওয়ার্ড দিন।</p>
         </div>
-        <form className="admin-login-form" onSubmit={handleLogin}>
+        <form className="admin-login-form" onSubmit={handleLogin} autoComplete="on">
           <div className="formrow">
             <label htmlFor="admin-email">অ্যাডমিন ইমেইল</label>
             <input id="admin-email" type="email" autoComplete="username" value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} required />
