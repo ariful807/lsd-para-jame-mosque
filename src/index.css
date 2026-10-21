@@ -139,3 +139,16 @@ button:focus-visible { outline:3px solid #d4af37aa; outline-offset:2px; }
 .prayer-footnote { color:var(--muted); font-size:12px; text-align:right; margin:12px 0 0; }
 @media(max-width:800px) { .prayer-time-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:480px) { .prayer-home-heading { align-items:flex-start; flex-direction:column; } .prayer-home-heading .btn { width:100%; } .prayer-time-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .prayer-time-item strong { font-size:18px; } }
+
+.admin-login-panel { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:clamp(20px,4vw,42px); padding:clamp(20px,4vw,42px); overflow:hidden; }
+.admin-login-art { background:radial-gradient(circle at 90% 8%,#d4af3730,transparent 30%),linear-gradient(145deg,#09251a,#0b6b4a); color:white; border-radius:20px; padding:clamp(22px,4vw,38px); display:flex; flex-direction:column; justify-content:center; min-height:320px; }
+.admin-login-mark { display:grid; place-items:center; width:60px; height:60px; border:1px solid #d4af37aa; color:var(--gold); border-radius:18px; font-size:34px; margin-bottom:24px; }
+.admin-login-eyebrow { color:#e4d9a8; font-size:11px; letter-spacing:1.8px; font-weight:700; }
+.admin-login-art h2 { color:white; font-size:clamp(24px,3vw,34px); margin:8px 0; }
+.admin-login-art p { color:#d2e4d8; line-height:1.8; margin:0; }
+.admin-login-form { padding:8px 0; align-self:center; width:100%; max-width:500px; }
+.admin-login-form .formrow { margin:0 0 16px; }
+.admin-login-form .formrow input { min-height:46px; }
+.admin-login-submit { width:100%; min-height:46px; margin-top:4px; }
+.admin-security-note { margin-top:18px; color:var(--muted); font-size:12px; line-height:1.7; }
+@media(max-width:760px) { .admin-login-panel { grid-template-columns:1fr; padding:14px; } .admin-login-art { min-height:0; padding:24px; } .admin-login-mark { width:48px; height:48px; margin-bottom:14px; } .admin-login-form { padding:8px 4px 4px; } }
