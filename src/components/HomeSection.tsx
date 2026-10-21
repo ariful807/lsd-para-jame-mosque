@@ -1,11 +1,12 @@
 import React from 'react';
-import { PublicData, Notice, Campaign } from '../types';
+import { PublicData, Notice, Campaign, PrayerTime } from '../types';
 import { formatMoney } from '../services/storage';
 
 interface HomeSectionProps {
   publicData: PublicData;
   onNavigate: (section: string) => void;
   onSelectCampaignForDonation: (campaign: Campaign) => void;
+  prayerTimes: PrayerTime;
 }
 
 export const HomeSection: React.FC<HomeSectionProps> = ({
@@ -44,6 +45,32 @@ export const HomeSection: React.FC<HomeSectionProps> = ({
           ☪
         </div>
       </div>
+
+      <section className="panel prayer-home-card" aria-label="আজকের নামাজের সময়">
+        <div className="prayer-home-heading">
+          <div>
+            <span className="prayer-eyebrow">নামাজের সময়সূচি</span>
+            <h2>আজকের নামাজের সময়</h2>
+            <p className="muted">নীলফামারী • Asia/Dhaka • {prayerTimes.Date}</p>
+          </div>
+          <button className="btn secondary" onClick={() => onNavigate('prayer_committee')}>সম্পূর্ণ সময়সূচি</button>
+        </div>
+        <div className="prayer-time-grid">
+          {[
+            ['ফজর', prayerTimes.Fajr],
+            ['সূর্যোদয়', prayerTimes.Sunrise],
+            ['যোহর', prayerTimes.Dhuhr],
+            ['আসর', prayerTimes.Asr],
+            ['মাগরিব', prayerTimes.Maghrib],
+            ['এশা', prayerTimes.Isha],
+          ].map(([label, time]) => (
+            <div className="prayer-time-item" key={label}>
+              <span>{label}</span><strong>{time}</strong>
+            </div>
+          ))}
+        </div>
+        <p className="prayer-footnote">জামাতের সময় মসজিদ কমিটি কর্তৃক নির্ধারিত।</p>
+      </section>
 
       <div className="stats">
         <div className="stat">
