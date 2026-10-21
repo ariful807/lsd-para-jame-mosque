@@ -126,3 +126,16 @@ button:focus-visible { outline:3px solid #d4af37aa; outline-offset:2px; }
   .footer { padding:26px 16px 14px; }
   .footer-bottom { flex-direction:column; }
 }
+
+.prayer-home-card { margin: 20px 0; }
+.prayer-home-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.prayer-home-heading h2 { margin:3px 0 2px; }
+.prayer-eyebrow { color:var(--green); font-size:12px; font-weight:700; letter-spacing:.4px; }
+.prayer-home-heading .muted { margin:0; }
+.prayer-time-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
+.prayer-time-item { padding:14px 8px; text-align:center; background:#f6faf6; border:1px solid var(--line); border-radius:14px; }
+.prayer-time-item span { display:block; color:var(--muted); font-size:13px; }
+.prayer-time-item strong { display:block; color:var(--deep); font-size:19px; margin-top:5px; }
+.prayer-footnote { color:var(--muted); font-size:12px; text-align:right; margin:12px 0 0; }
+@media(max-width:800px) { .prayer-time-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:480px) { .prayer-home-heading { align-items:flex-start; flex-direction:column; } .prayer-home-heading .btn { width:100%; } .prayer-time-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .prayer-time-item strong { font-size:18px; } }
