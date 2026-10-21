@@ -1,36 +1,34 @@
-# এলএসডি পাড়া জামে মসজিদ — Smart Mosque Management System
+# এলএসডি পাড়া জামে মসজিদ — Smart Mosque Management Portal
 
-A Bengali-first mosque management starter built with HTML/CSS/JavaScript and Google Apps Script + Google Sheets.
+A modern Bengali-first smart mosque management and transparency web application rewritten in **React 19, TypeScript, and Vite**, preserving the original design language, color palette, and business logic.
 
 ## Features
-- Public mosque homepage, notices, campaigns and financial summaries
-- Members, contributions, donations, income and expenses
-- Admin dashboard and server-side role checks
-- Sheet setup helper for the 18 required worksheets
-- Bengali interface, BDT currency, Asia/Dhaka timezone
-- CSV-friendly structured records and audit logging
+- **পাবলিক ড্যাশবোর্ড ও আর্থিক সারসংক্ষেপ (Public Overview)**: মোট আয় ও অনুদান, অনুদান, অনুমোদিত ব্যয় ও অবশিষ্ট তহবিলের লাইভ হিসাব।
+- **নোটিশ বোর্ড (Notices)**: অনুসন্ধানযোগ্য নোটিশ তালিকা, বিস্তারিত বিজ্ঞপ্তি দেখার মোডাল।
+- **অনুদান কার্যক্রম (Campaigns & Donations)**: চলমান উন্নয়ন প্রকল্প (যেমন: দ্বিতীয় তলার ফিনিশিং, আধুনিক ওজুখানা), লক্ষ্যমাত্রা ও সংগৃহীত অগ্রগতি ট্র্যাকিং, অনলাইন অনুদান ও রসিদ তৈরি।
+- **নামাজের সময়সূচি ও পরিচালনা কমিটি (Prayer Times & Committee)**: স্থানীয় সময়সূচি (Asia/Dhaka) ও সম্মানিত কমিটির পদবী এবং যোগাযোগের তথ্য।
+- **অ্যাডমিন ড্যাশবোর্ড (Admin Control Panel)**:
+  - সার্ভার-সাইড স্টাইল রোল ভ্যালিডেশন (অ্যাডমিন ইমেইল অথেন্টিকেশন)
+  - সদস্য তালিকা (Members), অনুদান (Donations), ব্যয় (Expenses), আয় (Income), নোটিশ (Notices), প্রজেক্ট (Projects), এবং অডিট লগ (Audit_Logs)
+  - সরাসরি ১-ক্লিকে বকেয়া ব্যয় অনুমোদন (Expense Approval)
+  - নতুন রেকর্ড এন্ট্রি ফর্ম (Generic Sheet Record Insert)
+  - ইন্টারেক্টিভ টেবিল ভিউ ও কাঁচা JSON ভিউ
+  - অডিট ট্রেইল ও লগিং
 
-## Repository files
-- `index.html` — responsive web interface
-- `Code.gs` — Google Apps Script backend and sheet setup
-- `appsscript.json` — Apps Script manifest
-- `SETUP-BN.md` — Bengali deployment guide
+## Tech Stack
+- **Framework**: React 19, TypeScript, Vite
+- **Styling**: Native CSS conforming to original aesthetic, colors (`--deep`, `--green`, `--gold`, `--paper`), and 'Hind Siliguri' font
+- **Icons**: Lucide React
+- **Persistence**: LocalStorage with realistic seed database for LSD Para Jame Mosque, Nilphamari
 
-## Quick setup
-1. Create a Google Sheet for the database.
-2. Open **Extensions → Apps Script**.
-3. Copy `Code.gs` into the Apps Script project and add the HTML file from `index.html` as an HTML file named `index`.
-4. Set Script Property `SPREADSHEET_ID` to the Google Sheet ID.
-5. Run `setupDatabase` once and authorize the requested permissions.
-6. Set Script Property `ADMIN_EMAILS` to the trusted administrator email(s), comma-separated.
-7. Deploy as **Web app**. Choose an execution identity and access scope appropriate for your organization; test with a non-admin account.
-8. Use the deployment URL. For changes, create a new deployment version.
+## Development
+```bash
+npm install
+npm run dev
+```
+Dev server listens on port 3000 at `http://0.0.0.0:3000`.
 
-## Important security notes
-- Never publish passwords, payment secrets, private member details or API keys in the frontend or repository.
-- Admin access is checked server-side against `ADMIN_EMAILS`; do not rely on hiding dashboard buttons.
-- This starter does not claim that bKash/Nagad/Rocket/SSLCommerz payments are live. Merchant credentials, verified server callbacks and reconciliation are required before enabling real transactions.
-- Review privacy, accounting and access requirements before using this for real mosque funds.
-
-## Initial admin
-No default password is embedded. Configure the trusted admin email in Script Properties and deploy with an account-access policy suitable for your Google Workspace / Google account environment.
+## Production Build
+```bash
+npm run build
+```

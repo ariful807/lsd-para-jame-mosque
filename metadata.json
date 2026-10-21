@@ -1,0 +1,7 @@
+{
+  "name": "এলএসডি পাড়া জামে মসজিদ",
+  "description": "স্মার্ট মসজিদ ব্যবস্থাপনা ও স্বচ্ছ হিসাব পোর্টাল - এলএসডি পাড়া জামে মসজিদ, নীলফামারী।",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
