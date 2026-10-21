@@ -542,6 +542,36 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
             </div>
 
             <form onSubmit={handleSaveNewRecord}>
+              {activeSheet === 'Contributions' && (
+                <>
+                  <div className="formrow"><label>সদস্য আইডি:</label><input required value={newRecordForm.Member_ID || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Member_ID: e.target.value })} placeholder="MEM-001" /></div>
+                  <div className="formrow"><label>সদস্যের নাম:</label><input required value={newRecordForm.Member_Name || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Member_Name: e.target.value })} /></div>
+                  <div className="formrow"><label>মাস:</label><select required value={newRecordForm.Month || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Month: e.target.value })}><option value="">মাস নির্বাচন করুন</option>{['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'].map((m) => <option key={m} value={m}>{m}</option>)}</select></div>
+                  <div className="formrow"><label>বছর:</label><input type="number" required min="2020" max="2100" value={newRecordForm.Year || new Date().getFullYear()} onChange={(e) => setNewRecordForm({ ...newRecordForm, Year: e.target.value })} /></div>
+                  <div className="formrow"><label>পরিমাণ (টাকা):</label><input type="number" required min="1" value={newRecordForm.Amount || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Amount: Number(e.target.value) })} /></div>
+                  <div className="formrow"><label>জমার মাধ্যম:</label><select value={newRecordForm.Payment_Method || 'নগদ'} onChange={(e) => setNewRecordForm({ ...newRecordForm, Payment_Method: e.target.value })}><option>নগদ</option><option>bKash</option><option>Nagad</option><option>ব্যাংক</option></select></div>
+                  <div className="formrow"><label>অবস্থা:</label><select value={newRecordForm.Status || 'Received'} onChange={(e) => setNewRecordForm({ ...newRecordForm, Status: e.target.value })}><option value="Received">জমা হয়েছে</option><option value="Pending">বকেয়া</option></select></div>
+                  <div className="formrow"><label>গ্রহণকারী:</label><input value={newRecordForm.Received_By || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Received_By: e.target.value })} /></div>
+                </>
+              )}
+
+              {activeSheet === 'Prayer_Times' && (
+                <>
+                  <div className="formrow"><label>তারিখ / শিরোনাম:</label><input required value={newRecordForm.Date || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Date: e.target.value })} placeholder="আজকের সময়সূচি" /></div>
+                  {(['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'] as const).map((key) => <div className="formrow" key={key}><label>{{Fajr:'ফজর',Sunrise:'সূর্যোদয়',Dhuhr:'যোহর',Asr:'আসর',Maghrib:'মাগরিব',Isha:'এশা'}[key]}:</label><input required value={newRecordForm[key] || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, [key]: e.target.value })} placeholder="০৫:০০" /></div>)}
+                </>
+              )}
+
+              {activeSheet === 'Committee' && (
+                <>
+                  <div className="formrow"><label>নাম:</label><input required value={newRecordForm.Name || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Name: e.target.value })} /></div>
+                  <div className="formrow"><label>পদবি:</label><input required value={newRecordForm.Position || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Position: e.target.value })} /></div>
+                  <div className="formrow"><label>প্রকাশ্য ফোন নম্বর:</label><input value={newRecordForm.Phone_Public || ''} onChange={(e) => setNewRecordForm({ ...newRecordForm, Phone_Public: e.target.value })} /></div>
+                  <div className="formrow"><label>ক্রম:</label><input type="number" value={newRecordForm.Sort_Order || 1} onChange={(e) => setNewRecordForm({ ...newRecordForm, Sort_Order: Number(e.target.value) })} /></div>
+                  <div className="formrow"><label>অবস্থা:</label><select value={newRecordForm.Status || 'Active'} onChange={(e) => setNewRecordForm({ ...newRecordForm, Status: e.target.value })}><option value="Active">সক্রিয়</option><option value="Inactive">নিষ্ক্রিয়</option></select></div>
+                </>
+              )}
+
               {activeSheet === 'Members' && (
                 <>
                   <div className="formrow">
