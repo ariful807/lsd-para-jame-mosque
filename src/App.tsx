@@ -241,7 +241,7 @@ export const App: React.FC = () => {
         {['about', 'donation', 'financials', 'contributions', 'events', 'gallery', 'contact', 'login'].includes(activeSection) && renderCustomSection()}
       </main>
 
-      <Footer />
+      <Footer onNavigate={handleNavigate} />
     </div>
   );
 };
