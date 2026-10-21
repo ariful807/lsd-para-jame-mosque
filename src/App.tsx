@@ -212,6 +212,7 @@ export const App: React.FC = () => {
             publicData={publicData}
             onNavigate={handleNavigate}
             onSelectCampaignForDonation={handleSelectCampaignForDonation}
+            prayerTimes={prayerTimes}
           />
         )}
 
