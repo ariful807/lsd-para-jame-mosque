@@ -139,7 +139,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onDataChanged }) => 
       const encoder = new TextEncoder();
       const makeHash = async (password: string, salt: Uint8Array) => {
         const material = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-        const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, material, 256);
+        const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt.slice().buffer as ArrayBuffer, iterations: 150000, hash: 'SHA-256' }, material, 256);
         return Array.from(new Uint8Array(bits)).map((b) => b.toString(16).padStart(2, '0')).join('');
       };
       const stored = localStorage.getItem(key);
