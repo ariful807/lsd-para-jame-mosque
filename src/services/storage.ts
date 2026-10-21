@@ -389,8 +389,15 @@ class MosqueStorage {
   }
 
   public ensureInitialized(): void {
-    if (!localStorage.getItem(STORAGE_KEY_PREFIX + 'initialized')) {
-      this.resetToDefaults();
+    // GitHub Pages may run in browsers/private modes where storage is restricted.
+    try {
+      if (!localStorage.getItem(STORAGE_KEY_PREFIX + 'initialized')) {
+        this.resetToDefaults();
+      }
+    } catch (error) {
+      // Keep the public site renderable even if browser storage is unavailable.
+      console.warn('Local storage unavailable; using in-memory defaults where possible.', error);
+      try { this.resetToDefaults(); } catch { /* storage writes are already guarded */ }
     }
   }
 
@@ -459,11 +466,11 @@ class MosqueStorage {
 
     // Published notices & campaigns
     const publishedNotices = noticeItems
-      .filter((n) => n.Status.toLowerCase() === 'published')
+      .filter((n) => String(n?.Status ?? '').toLowerCase() === 'published')
       .slice(0, 10);
 
     const activeCampaigns = campaignItems
-      .filter((c) => c.Status.toLowerCase() === 'active')
+      .filter((c) => String(c?.Status ?? '').toLowerCase() === 'active')
       .slice(0, 10);
 
     return {
