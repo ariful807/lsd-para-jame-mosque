@@ -565,6 +565,35 @@ class MosqueStorage {
     return { ok: true, message: 'রেকর্ড সংরক্ষিত হয়েছে।' };
   }
 
+  public adminUpdateRecord(sheetName: string, originalRecord: any, updatedRecord: any, currentUser: string): { ok: boolean } {
+    this.requireAdmin(currentUser);
+    const records: any[] = this.getSheet(sheetName);
+    const index = records.findIndex((item) => JSON.stringify(item) === JSON.stringify(originalRecord));
+    if (index < 0) throw new Error('সম্পাদনার রেকর্ডটি আর পাওয়া যাচ্ছে না। তালিকা রিফ্রেশ করুন।');
+    const safeRecord = { ...updatedRecord };
+    for (const key of ['Created_At', 'Created_By', 'Approved_By']) {
+      if (originalRecord[key] !== undefined && safeRecord[key] === undefined) safeRecord[key] = originalRecord[key];
+    }
+    records[index] = safeRecord;
+    this.setSheet(sheetName, records);
+    const idKey = Object.keys(originalRecord).find((key) => key.endsWith('_ID'));
+    this.audit('UPDATE', sheetName, idKey ? String(safeRecord[idKey] ?? originalRecord[idKey]) : 'record', { before: originalRecord, after: safeRecord });
+    return { ok: true };
+  }
+
+  public adminDeleteRecord(sheetName: string, record: any, currentUser: string): { ok: boolean } {
+    this.requireAdmin(currentUser);
+    if (sheetName === 'Audit_Logs') throw new Error('অডিট লগ সরাসরি মুছে ফেলা যাবে না।');
+    const records: any[] = this.getSheet(sheetName);
+    const index = records.findIndex((item) => JSON.stringify(item) === JSON.stringify(record));
+    if (index < 0) throw new Error('রেকর্ডটি পাওয়া যায়নি। তালিকা রিফ্রেশ করুন।');
+    records.splice(index, 1);
+    this.setSheet(sheetName, records);
+    const idKey = Object.keys(record).find((key) => key.endsWith('_ID'));
+    this.audit('DELETE', sheetName, idKey ? String(record[idKey]) : 'record', { deletedRecord: record });
+    return { ok: true };
+  }
+
   public adminApproveExpense(expenseId: string, currentUser: string): { ok: boolean } {
     this.requireAdmin(currentUser);
     const expenses = this.getSheet<Expense>('Expenses');
