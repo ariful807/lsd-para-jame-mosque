@@ -403,6 +403,7 @@ class MosqueStorage {
 
   public resetToDefaults(): void {
     this.set('Members', INITIAL_MEMBERS);
+    this.set('Contributions', []);
     this.set('Notices', INITIAL_NOTICES);
     this.set('Campaigns', INITIAL_CAMPAIGNS);
     this.set('Donations', INITIAL_DONATIONS);
@@ -498,7 +499,9 @@ class MosqueStorage {
     this.requireAdmin(currentUser);
     const counts: Record<string, number> = {
       Members: this.getSheet('Members').length,
-      Contributions: 0,
+      Contributions: this.getSheet('Contributions').length,
+      Committee: this.getSheet('Committee').length,
+      Prayer_Times: this.getSheet('Prayer_Times').length,
       Donations: this.getSheet('Donations').length,
       Income: this.getSheet('Income').length,
       Expenses: this.getSheet('Expenses').length,
@@ -545,6 +548,8 @@ class MosqueStorage {
       Notices: 'Notice_ID',
       Campaigns: 'Campaign_ID',
       Projects: 'Project_ID',
+      Contributions: 'Contribution_ID',
+      Committee: 'Committee_ID',
     };
 
     const idKey = idKeyMap[sheetName];
